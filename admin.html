@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hiraya Admin Dashboard</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="hero">
+    <h1>Hiraya Admin Dashboard</h1>
+    <p class="subtitle">Manage bookings and court availability</p>
+  </header>
+
+  <main class="container" id="adminDashboard">
+    <section class="stats-grid">
+      <div class="glass-card stat-card">
+        <h3>Total Bookings</h3>
+        <p class="stat-value" id="totalBookings">0</p>
+      </div>
+      <div class="glass-card stat-card">
+        <h3>Today's Bookings</h3>
+        <p class="stat-value" id="todayBookings">0</p>
+      </div>
+    </section>
+
+    <section class="glass-card filters-section">
+      <div class="form-group">
+        <label for="adminDateFilter">Date</label>
+        <input type="date" id="adminDateFilter">
+      </div>
+      <div class="form-group">
+        <label for="adminCourtFilter">Court</label>
+        <select id="adminCourtFilter">
+          <option value="">All Courts</option>
+          <option value="Court 1">Court 1</option>
+          <option value="Court 2">Court 2</option>
+          <option value="Court 3">Court 3</option>
+        </select>
+      </div>
+      <button id="applyFiltersBtn" class="btn-primary">Apply Filters</button>
+      <button id="clearFiltersBtn" class="btn-secondary">Clear</button>
+    </section>
+
+    <section class="glass-card table-section">
+      <table class="bookings-table">
+        <thead>
+          <tr>
+            <th data-label="ID">ID</th>
+            <th data-label="Date">Date</th>
+            <th data-label="Court">Court</th>
+            <th data-label="Time">Time</th>
+            <th data-label="Name">Name</th>
+            <th data-label="Mobile">Mobile</th>
+            <th data-label="Actions">Actions</th>
+          </tr>
+        </thead>
+        <tbody id="bookingsTableBody">
+          <!-- Rows populated by JS -->
+        </tbody>
+      </table>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <p>&copy; 2026 Hiraya Pickleball. All rights reserved.</p>
+    <p><a href="index.html">Back to Booking</a></p>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>
