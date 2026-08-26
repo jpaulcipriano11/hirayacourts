@@ -605,6 +605,7 @@ window.addEventListener('DOMContentLoaded', () => {
 <!-- Firebase SDK -->
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+
   import {
     getFirestore,
     collection,
@@ -614,6 +615,7 @@ window.addEventListener('DOMContentLoaded', () => {
     where,
     updateDoc,
     doc,
+    deleteDoc,
     orderBy
   } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
@@ -632,17 +634,17 @@ window.addEventListener('DOMContentLoaded', () => {
   // Make Firebase available to app.js
   window.db = db;
 
-window.firebaseFunctions = {
-  collection,
-  addDoc,
-  getDocs,
-  query,
-  where,
-  updateDoc,
-  doc,
-  deleteDoc,
-  orderBy
-};
+  window.firebaseFunctions = {
+    collection,
+    addDoc,
+    getDocs,
+    query,
+    where,
+    updateDoc,
+    doc,
+    deleteDoc,
+    orderBy
+  };
 
   console.log("🔥 Firebase initialized successfully");
 </script>
