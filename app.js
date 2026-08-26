@@ -602,14 +602,14 @@ async function renderMobileSchedule() {
   const lookupResult = document.getElementById('lookupResult');
   
   if (lookupBtn && lookupInput && lookupResult) {
-    lookupBtn.addEventListener('click', () => {
+    lookupBtn.addEventListener('click', async () => { // Added 'async'
       const query = lookupInput.value.trim();
       if (!query) {
         alert('Please enter a Booking ID or Phone Number');
         return;
       }
 
-      const db = getMockDB();
+         const db = await getBookings();
       
       // Get ALL active bookings matching the query
       const activeBookings = db.filter(b => {
