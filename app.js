@@ -1603,7 +1603,7 @@ async function notifyAdminOfNewBooking(bookingData) {
   };
 
   try {
-    await emailjs.send('service_wxmu6km', 'template_00wtuwj', adminParams);
+    await emailjs.send('service_fahdva2', 'template_3acx2oo', adminParams);
     console.log('✅ Admin notification email sent successfully!');
   } catch (error) {
     console.error('❌ Failed to send admin email:', error);
@@ -1635,7 +1635,7 @@ async function notifyCustomerOfConfirmation(bookingData) {
 
   try {
     if (customerParams.to_email && customerParams.to_email.includes('@')) {
-      await emailjs.send('service_wxmu6km', 'template_44z8luc', customerParams);
+      await emailjs.send('service_fahdva2', 'template_26p0h6c', customerParams);
       console.log('✅ Customer confirmation email sent successfully!');
     } else {
       console.warn('⚠️ Customer email skipped: Invalid email address.');
