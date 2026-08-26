@@ -915,13 +915,36 @@ async function loadAdminData() {
   
   // 4. Update stats
   const totalBookings = db.filter(b => b.status !== 'cancelled').length;
-  const todayBookings = db.filter(b => b.date === today && b.status !== 'cancelled').length;
-  
-  const todayRevenue = db
+  const todayBookings = new Set(
+  db
     .filter(b => b.date === today && b.status !== 'cancelled')
-    .reduce((sum, b) => {
-      return sum + (b.totalAmount || calculateBookingTotal(b));
-    }, 0);
+    .map(b => b.bookingId)
+).size;
+  
+const todayRevenue = (() => {
+  // Group today's bookings by bookingId
+  const groups = {};
+
+  db
+    .filter(b => b.date === today && b.status !== 'cancelled')
+    .forEach(b => {
+      if (!groups[b.bookingId]) {
+        groups[b.bookingId] = [];
+      }
+
+      groups[b.bookingId].push(b);
+    });
+
+  // Calculate each booking only ONCE
+  return Object.values(groups).reduce((sum, group) => {
+    const firstBooking = group[0];
+
+    // Calculate the booking total once
+    const bookingTotal = calculateBookingTotal(firstBooking);
+
+    return sum + bookingTotal;
+  }, 0);
+})();
   
   const totalEl = document.getElementById('totalBookings');
   const todayEl = document.getElementById('todayBookings');
