@@ -1092,7 +1092,7 @@ async function viewBookingDetails(id) {
   const total = calculateBookingTotal(firstBooking);
 
   // Populate Modal Data
-  document.getElementById('det-id').textContent = firstBooking.id;
+  document.getElementById('det-id').textContent = firstBooking.bookingId;
   document.getElementById('det-date').textContent = firstBooking.date;
   document.getElementById('det-time').textContent = `${formatTime12(firstBooking.time)} - ${formatTime12(endTimeStr)} (${duration}h)`;
   document.getElementById('det-court').textContent = firstBooking.court;
@@ -1126,16 +1126,16 @@ async function viewBookingDetails(id) {
     cancelBtn.classList.remove('hidden');
   }
 
-  // Set up button actions for this specific booking
-  confirmBtn.onclick = () => {
-    confirmBooking(firstBooking.id);
-    window.closeDetailsModal();
-  };
+// Set up button actions for this specific booking
+confirmBtn.onclick = async () => {
+  await confirmBooking(firstBooking.bookingId);
+  window.closeDetailsModal();
+};
 
-  cancelBtn.onclick = () => {
-    cancelBookingFromAdmin(firstBooking.id);
-    window.closeDetailsModal();
-  };
+cancelBtn.onclick = async () => {
+  await cancelBookingFromAdmin(firstBooking.bookingId);
+  window.closeDetailsModal();
+};
 
   // Show Modal
   document.getElementById('bookingDetailsModal').classList.remove('hidden');
