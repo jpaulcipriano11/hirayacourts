@@ -713,7 +713,7 @@ async function renderMobileSchedule() {
       }
     });
   }
-});
+
 
 // ==========================================
 // GLOBAL FUNCTIONS (Outside DOMContentLoaded)
