@@ -489,7 +489,7 @@ async function renderMobileSchedule() {
       const addonsTotal = (paddleQty * 30) + (ballQty * 100);
       const totalAmount = basePrice + addonsTotal; // 🌟 THE CORRECT TOTAL
 
-      const db = getMockDB();
+      const db = await getBookings(); // ✅ Fetches from Firebase
       const startHour = parseInt(startTimeStr.split(':')[0]);
       let isAvailable = true;
 
