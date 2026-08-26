@@ -743,9 +743,9 @@ function getFacilitySettings() {
   };
 }
 
-window.cancelBookingFunc = function(id) {
+window.cancelBookingFunc = async function(id) {
   if(confirm('Are you sure you want to cancel this booking? This will cancel ALL hours for this booking.')) {
-    const db = getMockDB();
+    const db = await getBookings();
     const updated = db.map(b => {
       if (b.id === id && b.status !== 'cancelled') {
         return { ...b, status: 'cancelled' };
@@ -776,9 +776,9 @@ window.closeGcashModal = closeGcashModal;
 // ==========================================
 // GLOBAL CANCEL FUNCTION
 // ==========================================
-window.cancelBookingFunc = function(id) {
+window.cancelBookingFunc = async function(id) {
   if(confirm('Are you sure you want to cancel this booking? This will cancel ALL hours for this booking.')) {
-    const db = getMockDB();
+    const db = await getBookings();
     
     // Cancel ALL entries with this booking ID
     const updated = db.map(b => {
@@ -1144,8 +1144,8 @@ window.closeDetailsModal = function() {
   document.getElementById('bookingDetailsModal').classList.add('hidden');
 };
 
-function exportToCSV() {
-  const db = getMockDB();
+async function exportToCSV() {
+  const db = await getBookings();
   const filteredBookings = db.filter(b => b.status !== 'cancelled');
   
   // ✅ GROUP BY ID to prevent duplicate rows for multi-hour bookings
@@ -1202,7 +1202,7 @@ async function exportToPDF() {
 
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF();
-  const db = getMockDB();
+  const db = await getBookings();
   const filteredBookings = db.filter(b => b.status !== 'cancelled');
   
   // ✅ GROUP BY ID to prevent duplicate rows for multi-hour bookings
@@ -1299,8 +1299,8 @@ async function exportToPDF() {
 // EDIT BOOKING FUNCTIONS
 // ==========================================
 
-function openEditModal(id) {
-  const db = getMockDB();
+async function openEditModal(id) {
+  const db = await getBookings();
   // Get all records for this booking
   const bookings = db.filter(b => b.bookingId === id);
   if (bookings.length === 0) return;
@@ -1354,7 +1354,7 @@ function closeEditModal() {
   document.getElementById('editBookingModal').classList.add('hidden');
 }
 
-function saveEditedBooking() {
+async function saveEditedBooking() {
   const id = document.getElementById('editBookingId').value;
   const newDate = document.getElementById('editDate').value;
   const newTime = document.getElementById('editTime').value;
@@ -1369,7 +1369,7 @@ function saveEditedBooking() {
     return;
   }
 
-  const db = getMockDB();
+  const db = await getBookings();
   const startHour = parseInt(newTime.split(':')[0]);
   let isAvailable = true;
 
