@@ -1852,30 +1852,7 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 });
 
-// Update the calculate total function to use dynamic rates
-function updateBookingTotal() {
-  const duration = parseInt(document.getElementById('bookingDuration')?.value || 1);
-  const paddleQty = parseInt(document.getElementById('paddleQty')?.textContent || 0);
-  const ballQty = parseInt(document.getElementById('ballQty')?.textContent || 0);
-  
-  // Get the correct rate based on AM/PM
-  // When creating the booking object
-const hourlyRate = getCurrentRate();
-const courtPrice = hourlyRate * duration;
-const addonsPrice = (paddleQty * 30) + (ballQty * 100);
-const totalPrice = courtPrice + addonsPrice;
 
-// Use totalPrice when saving the booking
-  
-  // Update displays
-  const addonsDisplay = document.getElementById('addonsPriceDisplay');
-  const totalDisplay = document.getElementById('grandTotalDisplay');
-  
-  if (addonsDisplay) addonsDisplay.textContent = `₱${addonsPrice}`;
-  if (totalDisplay) totalDisplay.textContent = `₱${total}`;
-  
-  return total;
-}
 
 // Add event listeners for real-time updates
 document.addEventListener('DOMContentLoaded', () => {
