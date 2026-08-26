@@ -264,47 +264,31 @@ function selectSlot(date, time, court) {
 // ==========================================
 // INITIALIZATION & EVENT LISTENERS
 // ==========================================
-document.addEventListener('DOMContentLoaded', () => {
-  
-  // 1. Only run booking form logic if we are actually on the booking page
-  if (document.getElementById('bookingDuration')) {
-    updateFormTotal(); // Initialize add-on/duration totals
-    
-    const durationSelect = document.getElementById('bookingDuration');
-    if (durationSelect) {
-      durationSelect.addEventListener('change', updateFormTotal);
-    }
 
-    // Update total when add-ons change
-    document.querySelectorAll('.qty-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        setTimeout(updateFormTotal, 100);
-      });
-    });
+  // Add this inside DOMContentLoaded, near the other event listeners
+  const durationSelect = document.getElementById('bookingDuration');
+  if (durationSelect) {
+    durationSelect.addEventListener('change', updateFormTotal);
   }
-
-  // 2. Render Calendar & Mobile Schedule (Safe to run everywhere)
+document.addEventListener('DOMContentLoaded', () => {
   renderCalendar();
-  renderMobileSchedule();
-
-  // 3. AM/PM Filter Button Logic
+  renderMobileSchedule(); // Initialize mobile view
+  updateFormTotal(); // Initialize add-on/duration totals
+  
+  // AM/PM Filter Button Logic
   document.querySelectorAll('.filter-btn').forEach(btn => {
     btn.addEventListener('click', (e) => {
       document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
       e.target.classList.add('active');
       currentFilter = e.target.dataset.filter;
       renderCalendar();
-      renderMobileSchedule();
+        // Also render mobile view
+  renderMobileSchedule();
     });
   });
 
-  // 4. Load Admin Data (Only if we are on the admin page)
-  if (document.getElementById('bookingsTableBody')) {
-    loadAdminData();
-  }
+  
 
-  // ... (Keep your Floating Nav and Mobile Menu code here) ...
-});
   // ==========================================
 // MOBILE SCHEDULE LIST RENDERING
 // ==========================================
@@ -713,7 +697,7 @@ async function renderMobileSchedule() {
       }
     });
   }
-
+});
 
 // ==========================================
 // GLOBAL FUNCTIONS (Outside DOMContentLoaded)
