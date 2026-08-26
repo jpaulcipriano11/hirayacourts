@@ -966,6 +966,14 @@ function renderAdminTable(bookings) {
     return;
   }
 
+// Sort bookings: latest date/time first
+bookingGroups.sort((a, b) => {
+  const dateA = new Date(`${a[0].date}T${a[0].time}`);
+  const dateB = new Date(`${b[0].date}T${b[0].time}`);
+
+  return dateB - dateA;
+});
+
   tbody.innerHTML = bookingGroups.map(group => {
     // Sort the hours in this group chronologically
     group.sort((a, b) => a.time.localeCompare(b.time));
