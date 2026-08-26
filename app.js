@@ -1067,8 +1067,8 @@ async function cancelBookingFromAdmin(id) {
   }
 }
 
-function viewBookingDetails(id) {
-  const db = getMockDB();
+async function viewBookingDetails(id) {
+  const db = await getBookings();
   
   // 1. Find ALL records for this booking ID
   const bookings = db.filter(b => b.id === id);
