@@ -974,6 +974,8 @@ function renderAdminTable(bookings) {
     const last = group[group.length - 1];
     const duration = group.length; // Number of hours
 
+    const total = calculateBookingTotal(first);
+
     // Calculate End Time
     const lastHour = parseInt(last.time.split(':')[0]);
     const endHour = lastHour + 1;
