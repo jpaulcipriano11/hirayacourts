@@ -90,37 +90,36 @@ function getFilteredTimeSlots() {
   return TIME_SLOTS;
 }
 
+// Form calculator for the Customer Booking Page (Safe for Admin Page too)
 function updateFormTotal() {
-  const duration = parseInt(document.getElementById('bookingDuration').value) || 1;
-  const paddleQty = parseInt(document.getElementById('paddleQty').textContent) || 0;
-  const ballQty = parseInt(document.getElementById('ballQty').textContent) || 0;
+  // 1. Check if we are actually on the booking page
+  const durationEl = document.getElementById('bookingDuration');
+  const hiddenTimeEl = document.getElementById('hiddenTime');
   
-  const selectedTime = document.getElementById('hiddenTime').value;
-  const selectedDate = document.getElementById('hiddenDate').value;
-  
-  // 🌟 DEFAULT TO 0: If no slot is selected, court price is 0
-  let courtPrice = 0; 
-  
-  if (selectedTime && selectedDate) {
-    // Check if time is AM (before 12:00 PM)
-    const timeLower = selectedTime.toLowerCase();
-    const hour = parseInt(selectedTime.split(':')[0]);
-    
-    if (timeLower.includes('am') && !timeLower.includes('12:00')) {
-      courtPrice = 200 * duration; // AM rate
-    } else if (hour < 12 && !timeLower.includes('pm')) {
-      courtPrice = 200 * duration; // 24-hour format AM
-    } else {
-      courtPrice = 300 * duration; // PM rate
-    }
+  // If these don't exist (like on the admin page), stop running this function!
+  if (!durationEl || !hiddenTimeEl) return; 
+
+  const paddleQtyEl = document.getElementById('paddleQty');
+  const ballQtyEl = document.getElementById('ballQty');
+  const addonsDisplay = document.getElementById('addonsPriceDisplay');
+  const totalDisplay = document.getElementById('grandTotalDisplay');
+
+  const duration = parseInt(durationEl.value) || 1;
+  const paddleQty = parseInt(paddleQtyEl ? paddleQtyEl.textContent : 0) || 0;
+  const ballQty = parseInt(ballQtyEl ? ballQtyEl.textContent : 0) || 0;
+  const selectedTime = hiddenTimeEl.value;
+
+  let courtPrice = 0;
+  if (selectedTime) {
+    const hourlyRate = isAM(selectedTime) ? RATE_AM : RATE_PM;
+    courtPrice = hourlyRate * duration;
   }
-  
+
   const addonsPrice = (paddleQty * 30) + (ballQty * 100);
   const total = courtPrice + addonsPrice;
-  
-  // Update the display
-  document.getElementById('addonsPriceDisplay').textContent = `₱${addonsPrice}`;
-  document.getElementById('grandTotalDisplay').textContent = `₱${total}`;
+
+  if (addonsDisplay) addonsDisplay.textContent = `₱${addonsPrice}`;
+  if (totalDisplay) totalDisplay.textContent = `₱${total}`;
 }
 // ==========================================
 // CALENDAR RENDERING
@@ -265,31 +264,47 @@ function selectSlot(date, time, court) {
 // ==========================================
 // INITIALIZATION & EVENT LISTENERS
 // ==========================================
-
-  // Add this inside DOMContentLoaded, near the other event listeners
-  const durationSelect = document.getElementById('bookingDuration');
-  if (durationSelect) {
-    durationSelect.addEventListener('change', updateFormTotal);
-  }
 document.addEventListener('DOMContentLoaded', () => {
-  renderCalendar();
-  renderMobileSchedule(); // Initialize mobile view
-  updateFormTotal(); // Initialize add-on/duration totals
   
-  // AM/PM Filter Button Logic
+  // 1. Only run booking form logic if we are actually on the booking page
+  if (document.getElementById('bookingDuration')) {
+    updateFormTotal(); // Initialize add-on/duration totals
+    
+    const durationSelect = document.getElementById('bookingDuration');
+    if (durationSelect) {
+      durationSelect.addEventListener('change', updateFormTotal);
+    }
+
+    // Update total when add-ons change
+    document.querySelectorAll('.qty-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        setTimeout(updateFormTotal, 100);
+      });
+    });
+  }
+
+  // 2. Render Calendar & Mobile Schedule (Safe to run everywhere)
+  renderCalendar();
+  renderMobileSchedule();
+
+  // 3. AM/PM Filter Button Logic
   document.querySelectorAll('.filter-btn').forEach(btn => {
     btn.addEventListener('click', (e) => {
       document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
       e.target.classList.add('active');
       currentFilter = e.target.dataset.filter;
       renderCalendar();
-        // Also render mobile view
-  renderMobileSchedule();
+      renderMobileSchedule();
     });
   });
 
-  
+  // 4. Load Admin Data (Only if we are on the admin page)
+  if (document.getElementById('bookingsTableBody')) {
+    loadAdminData();
+  }
 
+  // ... (Keep your Floating Nav and Mobile Menu code here) ...
+});
   // ==========================================
 // MOBILE SCHEDULE LIST RENDERING
 // ==========================================
