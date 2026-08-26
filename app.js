@@ -647,7 +647,7 @@ async function renderMobileSchedule() {
       // Get ALL active bookings matching the query
       const activeBookings = db.filter(b => {
         if (!b || b.status === 'cancelled') return false;
-        const matchId = b.id === query;
+        const matchId = b.bookingId === query;
         const matchMobile = b.mobile === query;
         const matchMobileNumbersOnly = b.mobile && b.mobile.replace(/\D/g,'') === query.replace(/\D/g,'');
         return (matchId || matchMobile || matchMobileNumbersOnly);
@@ -681,7 +681,7 @@ async function renderMobileSchedule() {
           <div style="background: white; padding: 20px; border-radius: 8px; border-left: 4px solid var(--success);">
             <h3 style="margin-bottom: 16px; color: var(--purple-dark);">✓ Active Booking Found</h3>
             <div style="display: grid; gap: 12px; font-size: 0.95rem;">
-              <div><strong>Booking ID:</strong> ${firstBooking.id || 'N/A'}</div>
+              <div><strong>Booking ID:</strong> ${firstBooking.bookingId || 'N/A'}</div>
               <div><strong>Date:</strong> ${firstBooking.date || 'N/A'}</div>
               <div><strong>Time:</strong> ${startTimeStr} to ${endTimeStr} <span style="color: var(--purple-dark); font-weight: 700;">(${duration} Hour${duration > 1 ? 's' : ''})</span></div>
               <div><strong>Court:</strong> ${firstBooking.court || 'N/A'}</div>
@@ -693,7 +693,7 @@ async function renderMobileSchedule() {
               <div><strong>Total Paid:</strong> <span style="color: var(--success); font-weight: 700; font-size: 1.1rem;">₱${total}</span></div>
               <div><strong>Status:</strong> <span class="status-badge ${firstBooking.status || 'confirmed'}">${(firstBooking.status || 'confirmed').toUpperCase()}</span></div>
             </div>
-            <button onclick="window.cancelBookingFunc('${firstBooking.id}')" 
+            <button onclick="window.cancelBookingFunc('${firstBooking.bookingId}')"
               style="margin-top: 20px; background: var(--danger); color: white; border: none; padding: 10px 20px; border-radius: 6px; font-weight: 600; cursor: pointer;">
               Cancel Booking
             </button>
@@ -704,7 +704,7 @@ async function renderMobileSchedule() {
       } else {
         const cancelledBooking = db.find(b => {
           if (!b || b.status !== 'cancelled') return false;
-          const matchId = b.id === query;
+          const matchId = b.bookingId === query;
           const matchMobile = b.mobile === query;
           const matchMobileNumbersOnly = b.mobile && b.mobile.replace(/\D/g,'') === query.replace(/\D/g,'');
           return (matchId || matchMobile || matchMobileNumbersOnly);
