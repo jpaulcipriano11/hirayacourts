@@ -860,11 +860,11 @@ function calculateTotalEarnings(bookings) {
 }
 
 async function loadAdminData() {
-  const db = await getBookings(); // ✅ Changed from getMockDB()
+  // 1. Wait for Firebase to fetch the data
+  const db = await getBookings(); 
   const today = new Date().toISOString().split('T')[0];
-  // ...
   
-  // Get filter values safely
+  // 2. Get filter values safely
   const dateFilterEl = document.getElementById('adminDateFilter');
   const courtFilterEl = document.getElementById('adminCourtFilter');
   const statusFilterEl = document.getElementById('adminStatusFilter');
@@ -873,23 +873,20 @@ async function loadAdminData() {
   const courtFilter = courtFilterEl ? courtFilterEl.value : '';
   const statusFilter = statusFilterEl ? statusFilterEl.value : '';
   
-  // Apply filters
+  // 3. Apply filters (Ignore cancelled bookings by default)
   let filteredBookings = db.filter(b => b.status !== 'cancelled');
   
   if (dateFilter) filteredBookings = filteredBookings.filter(b => b.date === dateFilter);
   if (courtFilter) filteredBookings = filteredBookings.filter(b => b.court === courtFilter);
   if (statusFilter) filteredBookings = filteredBookings.filter(b => b.status === statusFilter);
   
-  // Update stats
+  // 4. Update stats
   const totalBookings = db.filter(b => b.status !== 'cancelled').length;
   const todayBookings = db.filter(b => b.date === today && b.status !== 'cancelled').length;
-    // Group bookings by ID to prevent double-counting multi-hour bookings
-    const uniqueTodayBookings = {};
-    db.filter(b => b.date === today && b.status !== 'cancelled').forEach(b => {
-      if (!uniqueTodayBookings[b.id]) uniqueTodayBookings[b.id] = b;
-    });
-
-    const todayRevenue = Object.values(uniqueTodayBookings).reduce((sum, b) => {
+  
+  const todayRevenue = db
+    .filter(b => b.date === today && b.status !== 'cancelled')
+    .reduce((sum, b) => {
       return sum + (b.totalAmount || calculateBookingTotal(b));
     }, 0);
   
@@ -901,7 +898,7 @@ async function loadAdminData() {
   if (todayEl) todayEl.textContent = todayBookings;
   if (revenueEl) revenueEl.textContent = `₱${todayRevenue}`;
   
-  // Render table
+  // 5. Render table
   renderAdminTable(filteredBookings);
 }
 
@@ -909,10 +906,10 @@ function renderAdminTable(bookings) {
   const tbody = document.getElementById('bookingsTableBody');
   if (!tbody) return;
 
-  // 1. Group bookings by ID
+    // 1. Group bookings by our new Firebase ID
   const grouped = {};
   bookings.forEach(b => {
-    if (!grouped[b.bookingId]) grouped[b.bookingId] = [];
+    if (!grouped[b.bookingId]) grouped[b.bookingId] = []; // ✅ Looking for 'bookingId'
     grouped[b.bookingId].push(b);
   });
 
