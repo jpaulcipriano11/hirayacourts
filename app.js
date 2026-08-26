@@ -1086,58 +1086,69 @@ async function viewBookingDetails(id) {
   const endHour = lastHour + 1;
   const endTimeStr = `${endHour.toString().padStart(2, '0')}:00`;
 
-  // 3. Calculate Correct Total Price (Court fee * duration + addons)
   // 3. Calculate Correct Total Price using dynamic AM/PM rates
   const total = calculateBookingTotal(firstBooking);
 
-  // Populate Modal Data
-  document.getElementById('det-id').textContent = firstBooking.id;
-  document.getElementById('det-date').textContent = firstBooking.date;
-  document.getElementById('det-time').textContent = `${formatTime12(firstBooking.time)} - ${formatTime12(endTimeStr)} (${duration}h)`;
-  document.getElementById('det-court').textContent = firstBooking.court;
+  // 🌟 SAFE DOM UPDATE HELPER: Prevents silent crashes if an ID is missing
+  const setSafeText = (elementId, text) => {
+    const el = document.getElementById(elementId);
+    if (el) el.textContent = text;
+  };
+
+  // Populate Modal Data Safely
+  setSafeText('det-id', firstBooking.id);
+  setSafeText('det-date', firstBooking.date);
+  setSafeText('det-time', `${formatTime12(firstBooking.time)} - ${formatTime12(endTimeStr)} (${duration}h)`);
+  setSafeText('det-court', firstBooking.court);
+  setSafeText('det-name', firstBooking.name);
+  setSafeText('det-email', firstBooking.email);
+  setSafeText('det-mobile', firstBooking.mobile);
+  setSafeText('det-payment', (firstBooking.payment || 'N/A').toUpperCase());
+  setSafeText('det-paddles', firstBooking.addons?.paddle || 0);
+  setSafeText('det-balls', firstBooking.addons?.ball || 0);
   
+  // Update BOTH possible total IDs to guarantee it shows up
+  setSafeText('det-total', `₱${total}`);
+  setSafeText('formTotal', `₱${total}`);
+
+  // Handle Status Badge Safely
   const statusEl = document.getElementById('det-status');
-  statusEl.textContent = (firstBooking.status || 'confirmed').toUpperCase();
-  statusEl.className = `detail-value status-badge ${firstBooking.status || 'confirmed'}`;
+  if (statusEl) {
+    statusEl.textContent = (firstBooking.status || 'pending').toUpperCase();
+    statusEl.className = `detail-value status-badge ${firstBooking.status || 'pending'}`;
+  }
 
-  document.getElementById('det-name').textContent = firstBooking.name;
-  document.getElementById('det-email').textContent = firstBooking.email;
-  document.getElementById('det-mobile').textContent = firstBooking.mobile;
-  document.getElementById('det-payment').textContent = firstBooking.payment.toUpperCase();
-  document.getElementById('det-paddles').textContent = firstBooking.addons?.paddle || 0;
-  document.getElementById('det-balls').textContent = firstBooking.addons?.ball || 0;
-  document.getElementById('det-total').textContent = `₱${total}`;
-
-  // Handle Action Buttons Visibility
+  // Handle Action Buttons Visibility Safely
   const confirmBtn = document.getElementById('modalConfirmBtn');
   const cancelBtn = document.getElementById('modalCancelBtn');
 
-    // Show the Confirm button ONLY if the booking is pending
-  if (firstBooking.status === 'pending') {
-    confirmBtn.classList.remove('hidden');
-  } else {
-    confirmBtn.classList.add('hidden');
+  if (confirmBtn) {
+    if (firstBooking.status === 'pending') {
+      confirmBtn.classList.remove('hidden');
+      confirmBtn.onclick = () => {
+        confirmBooking(firstBooking.id);
+        window.closeDetailsModal();
+      };
+    } else {
+      confirmBtn.classList.add('hidden');
+    }
   }
 
-  if (firstBooking.status === 'cancelled') {
-    cancelBtn.classList.add('hidden');
-  } else {
-    cancelBtn.classList.remove('hidden');
+  if (cancelBtn) {
+    if (firstBooking.status === 'cancelled') {
+      cancelBtn.classList.add('hidden');
+    } else {
+      cancelBtn.classList.remove('hidden');
+      cancelBtn.onclick = () => {
+        cancelBookingFromAdmin(firstBooking.id);
+        window.closeDetailsModal();
+      };
+    }
   }
 
-  // Set up button actions for this specific booking
-  confirmBtn.onclick = () => {
-    confirmBooking(firstBooking.id);
-    window.closeDetailsModal();
-  };
-
-  cancelBtn.onclick = () => {
-    cancelBookingFromAdmin(firstBooking.id);
-    window.closeDetailsModal();
-  };
-
-  // Show Modal
-  document.getElementById('bookingDetailsModal').classList.remove('hidden');
+  // 🌟 FINALLY: Show the Modal (Safely)
+  const modal = document.getElementById('bookingDetailsModal');
+  if (modal) modal.classList.remove('hidden');
 }
 
 window.closeDetailsModal = function() {
