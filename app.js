@@ -980,8 +980,7 @@ function renderAdminTable(bookings) {
     const endTimeStr = `${endHour.toString().padStart(2, '0')}:00`;
 
     
-        // Calculate Total Price using dynamic AM/PM rates
-    const total = calculateBookingTotal(first);
+
 
     // Format Add-ons text
     const addonsText = [];
@@ -1301,24 +1300,28 @@ async function exportToPDF() {
 
 async function openEditModal(id) {
   const db = await getBookings();
+
   // Get all records for this booking
   const bookings = db.filter(b => b.bookingId === id);
-  if (bookings.length === 0) return;
+
+  if (bookings.length === 0) {
+    console.error('Booking not found:', id);
+    return;
+  }
 
   const first = bookings[0];
   const duration = bookings.length;
 
   function updateEditTotal() {
-  const duration = parseInt(document.getElementById('editDuration').value) || 1;
-  const paddleQty = parseInt(document.getElementById('editPaddleQty').value) || 0;
-  const ballQty = parseInt(document.getElementById('editBallQty').value) || 0;
-  
-  // 3. Calculate Correct Total Price using dynamic AM/PM rates
-  const total = calculateBookingTotal(firstBooking);
-  
-  document.getElementById('editTotalAmount').textContent = `₱${total}`;
-  document.getElementById('editDurationDisplay').textContent = duration;
-}
+    const duration = parseInt(document.getElementById('editDuration').value) || 1;
+    const paddleQty = parseInt(document.getElementById('editPaddleQty').value) || 0;
+    const ballQty = parseInt(document.getElementById('editBallQty').value) || 0;
+
+    const total = calculateBookingTotal(first);
+
+    document.getElementById('editTotalAmount').textContent = `₱${total}`;
+    document.getElementById('editDurationDisplay').textContent = duration;
+  }
 
   // Populate Modal
   document.getElementById('editBookingId').value = id;
