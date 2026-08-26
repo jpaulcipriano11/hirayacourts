@@ -1364,7 +1364,7 @@ async function saveEditedBooking() {
   const newDate = document.getElementById('editDate').value;
   const newTime = document.getElementById('editTime').value;
   const newCourt = document.getElementById('editCourt').value;
-  const newDuration = parseInt(document.getElementById('editDuration').value);
+  const newDuration = parseInt(document.getElementById('editDuration').value) || 1;
   const newPaddle = parseInt(document.getElementById('editPaddleQty').value) || 0;
   const newBall = parseInt(document.getElementById('editBallQty').value) || 0;
   const newStatus = document.getElementById('editStatus').value;
@@ -1374,65 +1374,147 @@ async function saveEditedBooking() {
     return;
   }
 
-  const db = await getBookings();
-  const startHour = parseInt(newTime.split(':')[0]);
-  let isAvailable = true;
-
-  // 1. VALIDATION: Check if the NEW time slots are free (ignoring the current booking's old slots)
-  for (let i = 0; i < newDuration; i++) {
-    const checkHour = startHour + i;
-    const checkTimeStr = `${checkHour.toString().padStart(2, '0')}:00`;
-    
-    const isBooked = db.some(b => 
-      b.date === newDate && 
-      b.court === newCourt && 
-      b.time === checkTimeStr && 
-      b.status !== 'cancelled' &&
-      b.id !== id // IMPORTANT: Ignore the booking we are currently editing!
-    );
-
-    if (isBooked) {
-      isAvailable = false;
-      break;
-    }
-  }
-
-  if (!isAvailable) {
-    alert(`Sorry, the court is not available for ${newDuration} hour(s) starting at ${formatTime12(newTime)}.`);
+  if (!newTime) {
+    alert('Please select a start time.');
     return;
   }
 
-  // 2. DELETE OLD RECORDS for this Booking ID
-  const updatedDb = db.filter(b => b.id !== id);
+  try {
+    // ==========================================
+    // GET BOOKINGS FROM FIREBASE
+    // ==========================================
+    const db = await getBookings();
 
-  // 3. CREATE NEW RECORDS with the SAME ID
-  for (let i = 0; i < newDuration; i++) {
-    const currentHour = startHour + i;
-    const currentTimeStr = `${currentHour.toString().padStart(2, '0')}:00`;
+    // Find ALL hourly records for this booking
+    const currentBookings = db.filter(b => b.bookingId === id);
 
-    // Find original customer details (from the first record before we filtered it out)
-    const originalBooking = db.find(b => b.id === id);
+    if (currentBookings.length === 0) {
+      alert('Booking not found.');
+      console.error('Could not find booking:', id);
+      return;
+    }
 
-    const payload = {
-      id: id, // Keep the same ID!
-      date: newDate,
-      time: currentTimeStr,
-      court: newCourt,
-      name: originalBooking.name,
-      mobile: originalBooking.mobile,
-      email: originalBooking.email,
-      payment: originalBooking.payment,
-      addons: { paddle: newPaddle, ball: newBall },
-      duration: newDuration,
-      status: newStatus
-    };
-    updatedDb.push(payload);
+    // Keep the original customer information
+    const originalBooking = currentBookings[0];
+
+    // Firebase functions
+    const {
+      collection,
+      getDocs,
+      query,
+      where,
+      addDoc,
+      deleteDoc,
+      doc
+    } = window.firebaseFunctions;
+
+    // ==========================================
+    // CHECK AVAILABILITY
+    // ==========================================
+    const startHour = parseInt(newTime.split(':')[0]);
+
+    for (let i = 0; i < newDuration; i++) {
+      const checkHour = startHour + i;
+      const checkTimeStr =
+        `${checkHour.toString().padStart(2, '0')}:00`;
+
+      const isBooked = db.some(b =>
+        b.bookingId !== id &&
+        b.date === newDate &&
+        b.court === newCourt &&
+        b.time === checkTimeStr &&
+        b.status !== 'cancelled'
+      );
+
+      if (isBooked) {
+        alert(
+          `Sorry, ${formatTime12(checkTimeStr)} on ${newDate} at ${newCourt} is already booked.`
+        );
+        return;
+      }
+    }
+
+    // ==========================================
+    // FIND OLD FIRESTORE DOCUMENTS
+    // ==========================================
+    const q = query(
+      collection(window.db, 'bookings'),
+      where('bookingId', '==', id)
+    );
+
+    const snapshot = await getDocs(q);
+
+    console.log(`Found ${snapshot.docs.length} old records to replace.`);
+
+    // ==========================================
+    // DELETE OLD RECORDS
+    // ==========================================
+    await Promise.all(
+      snapshot.docs.map(document =>
+        deleteDoc(
+          doc(window.db, 'bookings', document.id)
+        )
+      )
+    );
+
+    console.log('Old booking records deleted.');
+
+    // ==========================================
+    // CREATE NEW RECORDS
+    // ==========================================
+    for (let i = 0; i < newDuration; i++) {
+      const currentHour = startHour + i;
+
+      const currentTimeStr =
+        `${currentHour.toString().padStart(2, '0')}:00`;
+
+      const payload = {
+        bookingId: id,
+        date: newDate,
+        time: currentTimeStr,
+        court: newCourt,
+
+        // Customer information
+        name: originalBooking.name,
+        mobile: originalBooking.mobile,
+        email: originalBooking.email,
+        payment: originalBooking.payment,
+
+        // Add-ons
+        addons: {
+          paddle: newPaddle,
+          ball: newBall
+        },
+
+        // Booking information
+        duration: newDuration,
+        status: newStatus
+      };
+
+      await addDoc(
+        collection(window.db, 'bookings'),
+        payload
+      );
+    }
+
+    console.log('New booking records created.');
+
+    // ==========================================
+    // SUCCESS
+    // ==========================================
+    alert('Booking updated successfully!');
+
+    closeEditModal();
+
+    // Reload admin table
+    await loadAdminData();
+
+  } catch (error) {
+    console.error('❌ Error updating booking:', error);
+    alert(
+      'Failed to update booking.\n\nCheck the browser console for details.'
+    );
   }
-
-  saveMockDB(updatedDb);
-  alert('Booking updated successfully!');
-  closeEditModal();
-  loadAdminData(); // Refresh table
 }
 
 // Live total calculation for Edit Modal

@@ -632,16 +632,17 @@ window.addEventListener('DOMContentLoaded', () => {
   // Make Firebase available to app.js
   window.db = db;
 
-  window.firebaseFunctions = {
-    collection,
-    addDoc,
-    getDocs,
-    query,
-    where,
-    updateDoc,
-    doc,
-    orderBy
-  };
+window.firebaseFunctions = {
+  collection,
+  addDoc,
+  getDocs,
+  query,
+  where,
+  updateDoc,
+  doc,
+  deleteDoc,
+  orderBy
+};
 
   console.log("🔥 Firebase initialized successfully");
 </script>
