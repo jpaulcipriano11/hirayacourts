@@ -1560,10 +1560,22 @@ function calculateBookingTotal(data) {
 
 // Form calculator for the Customer Booking Page
 function updateFormTotal() {
-  const duration = parseInt(document.getElementById('bookingDuration').value) || 1;
-  const paddleQty = parseInt(document.getElementById('paddleQty').textContent) || 0;
-  const ballQty = parseInt(document.getElementById('ballQty').textContent) || 0;
-  const selectedTime = document.getElementById('hiddenTime').value;
+  // 🛡️ SAFETY GUARD: If we are NOT on the booking page, STOP immediately.
+  const durationEl = document.getElementById('bookingDuration');
+  if (!durationEl) return; 
+
+  const hiddenTimeEl = document.getElementById('hiddenTime');
+  if (!hiddenTimeEl) return;
+
+  const paddleQtyEl = document.getElementById('paddleQty');
+  const ballQtyEl = document.getElementById('ballQty');
+  const addonsDisplay = document.getElementById('addonsPriceDisplay');
+  const totalDisplay = document.getElementById('grandTotalDisplay');
+
+  const duration = parseInt(durationEl.value) || 1;
+  const paddleQty = parseInt(paddleQtyEl ? paddleQtyEl.textContent : 0) || 0;
+  const ballQty = parseInt(ballQtyEl ? ballQtyEl.textContent : 0) || 0;
+  const selectedTime = hiddenTimeEl.value;
 
   let courtPrice = 0;
   if (selectedTime) {
@@ -1574,9 +1586,6 @@ function updateFormTotal() {
   const addonsPrice = (paddleQty * 30) + (ballQty * 100);
   const total = courtPrice + addonsPrice;
 
-  const addonsDisplay = document.getElementById('addonsPriceDisplay');
-  const totalDisplay = document.getElementById('grandTotalDisplay');
-  
   if (addonsDisplay) addonsDisplay.textContent = `₱${addonsPrice}`;
   if (totalDisplay) totalDisplay.textContent = `₱${total}`;
 }
