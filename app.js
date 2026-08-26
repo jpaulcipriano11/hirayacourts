@@ -1023,9 +1023,7 @@ bookingGroups.sort((a, b) => {
           </span>
         </td>
         <td>
-          ${first.payment === 'gcash' && first.status === 'pending' ? 
-            `<button class="action-btn confirm" onclick="confirmBooking('${first.bookingId}')">Confirm</button>` : 
-            ''}
+          
                     <button class="action-btn cancel" onclick="cancelBookingFromAdmin('${first.bookingId}')">Cancel</button>
           <button class="action-btn view" style="background:#e0e7ff; color:#3730a3;" onclick="openEditModal('${first.bookingId}')">Edit</button>
           <button class="action-btn view" onclick="viewBookingDetails('${first.bookingId}')">View</button>
