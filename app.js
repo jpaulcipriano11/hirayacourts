@@ -271,9 +271,13 @@ function selectSlot(date, time, court) {
     durationSelect.addEventListener('change', updateFormTotal);
   }
 document.addEventListener('DOMContentLoaded', () => {
-  renderCalendar();
+    renderCalendar();
   renderMobileSchedule(); // Initialize mobile view
-  updateFormTotal(); // Initialize add-on/duration totals
+  
+  // Only calculate form totals if we are on the booking page
+  if (document.getElementById('bookingDuration')) {
+    updateFormTotal();
+  }
   
   // AM/PM Filter Button Logic
   document.querySelectorAll('.filter-btn').forEach(btn => {
