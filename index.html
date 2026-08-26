@@ -571,13 +571,12 @@
    })();
 </script>
 
-<!-- Firebase SDK -->
+  <!-- Firebase SDK -->
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
   import { getFirestore, collection, addDoc, getDocs, query, where, updateDoc, doc, orderBy } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
   //  PASTE YOUR FIREBASE CONFIG HERE 👇
-  const firebaseConfig = {
 const firebaseConfig = {
   apiKey: "AIzaSyCraPGNB1mIlY_nsH9R_FHB276PnBgdBWM",
   authDomain: "hiraya-pickleball.firebaseapp.com",
@@ -586,7 +585,6 @@ const firebaseConfig = {
   messagingSenderId: "628682632738",
   appId: "1:628682632738:web:7f439ab5f6086bb062e47b"
 };
-  };
   // 👆 PASTE YOUR FIREBASE CONFIG HERE 👆
 
   const app = initializeApp(firebaseConfig);

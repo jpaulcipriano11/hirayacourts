@@ -1,23 +1,29 @@
 // ==========================================
-// MOCK DATABASE (LocalStorage)
+// FIREBASE DATABASE FUNCTIONS
 // ==========================================
-const MOCK_DB_KEY = 'hiraya_bookings_mock';
 
-function getMockDB() {
-  const data = localStorage.getItem(MOCK_DB_KEY);
-  if (data) return JSON.parse(data);
-  
-  const today = new Date();
-  const todayStr = today.toISOString().split('T')[0];
-  const initialData = [
-    { id: 'TEMP-001', date: todayStr, court: 'Court 1', time: '18:00', name: 'Juan', mobile: '09171111111', email: 'juan@test.com', payment: 'gcash', status: 'confirmed', addons: { paddle: 0, ball: 0 } }
-  ];
-  localStorage.setItem(MOCK_DB_KEY, JSON.stringify(initialData));
-  return initialData;
+async function getBookings() {
+  if (!window.db) return []; 
+  const { collection, getDocs, query, orderBy } = window.firebaseFunctions;
+  const q = query(collection(window.db, "bookings"), orderBy("date", "asc"));
+  const querySnapshot = await getDocs(q);
+  return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 }
 
-function saveMockDB(db) { 
-  localStorage.setItem(MOCK_DB_KEY, JSON.stringify(db)); 
+async function addBooking(bookingDataArray) {
+  const { collection, addDoc } = window.firebaseFunctions;
+  const promises = bookingDataArray.map(data => addDoc(collection(window.db, "bookings"), data));
+  await Promise.all(promises);
+}
+
+async function updateBookingStatus(bookingId, newStatus) {
+  const { collection, getDocs, query, where, updateDoc, doc } = window.firebaseFunctions;
+  const q = query(collection(window.db, "bookings"), where("bookingId", "==", bookingId));
+  const querySnapshot = await getDocs(q);
+  const promises = querySnapshot.docs.map(document => 
+    updateDoc(doc(window.db, "bookings", document.id), { status: newStatus })
+  );
+  await Promise.all(promises);
 }
 
 // ==========================================
@@ -124,7 +130,7 @@ async function renderCalendar() {
   if (!grid) return;
   
   const weekDates = getWeekDates();
-  const db = getMockDB();
+  const db = await getBookings();
   const filteredTimes = getFilteredTimeSlots();
   
   let html = '<div class="calendar-cell calendar-header"></div>';
@@ -288,12 +294,12 @@ document.addEventListener('DOMContentLoaded', () => {
 // MOBILE SCHEDULE LIST RENDERING
 // ==========================================
 
-function renderMobileSchedule() {
+async function renderMobileSchedule() {
   const listContainer = document.getElementById('mobileScheduleList');
   if (!listContainer) return;
   
   const weekDates = getWeekDates();
-  const db = getMockDB();
+  const db = await getBookings();
   const filteredTimes = getFilteredTimeSlots();
   
   let html = '';
@@ -512,15 +518,16 @@ function renderMobileSchedule() {
       }
 
       // SAVE BOOKINGS
-      const bookingId = 'TEMP-' + Math.floor(Math.random() * 10000);
+          const bookingId = 'TEMP-' + Math.floor(Math.random() * 10000);
       const status = 'pending'; 
+      const bookingsToSave = [];
 
       for (let i = 0; i < duration; i++) {
         const currentHour = startHour + i;
         const currentTimeStr = `${currentHour.toString().padStart(2, '0')}:00`;
 
-        const payload = {
-          id: bookingId,
+        bookingsToSave.push({
+          bookingId: bookingId, // We use 'bookingId' for our custom ID
           date: date,
           time: currentTimeStr,
           court: court,
@@ -531,12 +538,11 @@ function renderMobileSchedule() {
           addons: { paddle: paddleQty, ball: ballQty },
           duration: duration,
           status: status,
-          totalAmount: totalAmount // 🌟 ADDED: So the admin dashboard reads the correct price!
-        };
-        db.push(payload);
+          totalAmount: totalAmount
+        });
       }
       
-      saveMockDB(db);
+      await addBooking(bookingsToSave); // Saves to the cloud!
 
       // Trigger Admin Email
       notifyAdminOfNewBooking({
@@ -853,9 +859,10 @@ function calculateTotalEarnings(bookings) {
   }, 0);
 }
 
-function loadAdminData() {
-  const db = getMockDB();
+async function loadAdminData() {
+  const db = await getBookings(); // ✅ Changed from getMockDB()
   const today = new Date().toISOString().split('T')[0];
+  // ...
   
   // Get filter values safely
   const dateFilterEl = document.getElementById('adminDateFilter');
@@ -905,8 +912,8 @@ function renderAdminTable(bookings) {
   // 1. Group bookings by ID
   const grouped = {};
   bookings.forEach(b => {
-    if (!grouped[b.id]) grouped[b.id] = [];
-    grouped[b.id].push(b);
+    if (!grouped[b.bookingId]) grouped[b.bookingId] = [];
+    grouped[b.bookingId].push(b);
   });
 
   // 2. Convert to array of groups
@@ -953,7 +960,7 @@ function renderAdminTable(bookings) {
 
     return `
       <tr>
-        <td><strong>${first.id}</strong></td>
+        <td><strong>${first.bookingId}</strong></td>
         <td>${first.date}</td>
         <td>
           ${formatTime12(first.time)} - ${formatTime12(endTimeStr)}
@@ -978,11 +985,11 @@ function renderAdminTable(bookings) {
         </td>
         <td>
           ${first.payment === 'gcash' && first.status === 'pending' ? 
-            `<button class="action-btn confirm" onclick="confirmBooking('${first.id}')">Confirm</button>` : 
+            `<button class="action-btn confirm" onclick="confirmBooking('${first.bookingId}')">Confirm</button>` : 
             ''}
-                    <button class="action-btn cancel" onclick="cancelBookingFromAdmin('${first.id}')">Cancel</button>
-          <button class="action-btn view" style="background:#e0e7ff; color:#3730a3;" onclick="openEditModal('${first.id}')">Edit</button>
-          <button class="action-btn view" onclick="viewBookingDetails('${first.id}')">View</button>
+                    <button class="action-btn cancel" onclick="cancelBookingFromAdmin('${first.bookingId}')">Cancel</button>
+          <button class="action-btn view" style="background:#e0e7ff; color:#3730a3;" onclick="openEditModal('${first.bookingId}')">Edit</button>
+          <button class="action-btn view" onclick="viewBookingDetails('${first.bookingId}')">View</button>
         </td>
       </tr>
     `;
@@ -1014,44 +1021,18 @@ function showToast(message, type = 'success') {
 }
 
 async function confirmBooking(id) {
-  const db = getMockDB();
-  
-  // Get the booking data (all hours share the same data, so we just grab the first one)
-  const booking = db.find(b => b.id === id);
-  
-  if (booking) {
-    // 1. Update status to 'confirmed' for ALL hours associated with this booking ID
-    const updatedDb = db.map(b => {
-      if (b.id === id) {
-        return { ...b, status: 'confirmed' };
-      }
-      return b;
-    });
-    
-    saveMockDB(updatedDb);
-    
-    // 2. Send the confirmation email to the customer!
-    await notifyCustomerOfConfirmation(booking);
-    
-       showToast(`Booking ${id} confirmed! Customer has been notified.`, 'success');
-    loadAdminData(); // Refresh the admin table
-  }
+  await updateBookingStatus(id, 'confirmed');
+  const db = await getBookings();
+  const booking = db.find(b => b.bookingId === id);
+  if (booking) await notifyCustomerOfConfirmation(booking);
+  showToast(`Booking ${id} confirmed! Customer notified.`, 'success');
+  loadAdminData();
 }
 
-function cancelBookingFromAdmin(id) {
-  if (confirm('Are you sure you want to cancel this booking? This will cancel ALL hours for this booking.')) {
-    const db = getMockDB();
-    
-    // Cancel ALL entries with this booking ID (for multi-hour bookings)
-    const updated = db.map(b => {
-      if (b.id === id && b.status !== 'cancelled') {
-        return { ...b, status: 'cancelled' };
-      }
-      return b;
-    });
-    
-    saveMockDB(updated);
-        showToast(`Booking ${id} has been cancelled.`, 'error');
+async function cancelBookingFromAdmin(id) {
+  if (confirm('Are you sure you want to cancel this booking?')) {
+    await updateBookingStatus(id, 'cancelled');
+    showToast(`Booking ${id} has been cancelled.`, 'error');
     loadAdminData();
   }
 }
