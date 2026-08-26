@@ -423,10 +423,10 @@ window.addEventListener('DOMContentLoaded', () => {
   
   if (bookingId) {
     // Wait for the admin dashboard to load, then open the booking
-    setTimeout(() => {
+    setTimeout(async () => { // ✅ Added 'async' here
       // Check if the booking exists and open it
-      const db = getMockDB();
-      const booking = db.find(b => b.id === bookingId);
+      const db = await getBookings(); // ✅ Changed to await getBookings()
+      const booking = db.find(b => b.bookingId === bookingId); // ✅ Changed 'id' to 'bookingId'
       
       if (booking) {
         console.log('Auto-opening booking:', bookingId);
@@ -440,6 +440,7 @@ window.addEventListener('DOMContentLoaded', () => {
     }, 1000);
   }
 });
+
 
   // ==========================================
   // SETTINGS LOGIC

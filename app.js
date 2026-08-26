@@ -1,22 +1,52 @@
 // ==========================================
-// FIREBASE DATABASE FUNCTIONS
+// FIREBASE DATABASE FUNCTIONS (BULLETPROOF)
 // ==========================================
 
+// Helper to wait for Firebase module to finish loading
+function waitForFirebase() {
+  return new Promise((resolve) => {
+    let checks = 0;
+    const interval = setInterval(() => {
+      if (window.db || checks > 30) { // Wait up to 3 seconds
+        clearInterval(interval);
+        resolve();
+      }
+      checks++;
+    }, 100);
+  });
+}
+
 async function getBookings() {
-  if (!window.db) return []; 
-  const { collection, getDocs, query, orderBy } = window.firebaseFunctions;
-  const q = query(collection(window.db, "bookings"), orderBy("date", "asc"));
-  const querySnapshot = await getDocs(q);
-  return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+  await waitForFirebase(); // ⏳ Wait for Firebase to be ready
+  if (!window.db) {
+    console.error("Firebase failed to load!");
+    return []; 
+  }
+  
+  const { collection, getDocs } = window.firebaseFunctions;
+  try {
+    // Fetch all bookings (Removed orderBy to prevent silent query errors)
+    const querySnapshot = await getDocs(collection(window.db, "bookings"));
+    return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+  } catch (error) {
+    console.error("Error fetching from Firebase:", error);
+    return [];
+  }
 }
 
 async function addBooking(bookingDataArray) {
+  await waitForFirebase(); // ⏳ Wait for Firebase to be ready
+  if (!window.db) throw new Error("Firebase failed to load");
+
   const { collection, addDoc } = window.firebaseFunctions;
   const promises = bookingDataArray.map(data => addDoc(collection(window.db, "bookings"), data));
   await Promise.all(promises);
 }
 
 async function updateBookingStatus(bookingId, newStatus) {
+  await waitForFirebase(); // ⏳ Wait for Firebase to be ready
+  if (!window.db) return;
+
   const { collection, getDocs, query, where, updateDoc, doc } = window.firebaseFunctions;
   const q = query(collection(window.db, "bookings"), where("bookingId", "==", bookingId));
   const querySnapshot = await getDocs(q);
